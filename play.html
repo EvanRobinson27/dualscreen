@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>DualScreen</title>
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DualScreen">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/player.css">
+</head>
+<body>
+  <div id="stage">
+    <div id="mainclip"><div id="gamebox"><div id="game"></div></div></div>
+    <canvas id="bottomScreen" class="hidden"></canvas>
+
+    <div id="controls">
+      <div class="pad btn-shoulder" data-key="L">L</div>
+      <div class="pad btn-shoulder" data-key="R">R</div>
+      <div class="pad dpad" data-key="DPAD">
+        <div class="arm h"></div><div class="arm v"></div><div class="hub"></div>
+        <i class="tri up"></i><i class="tri down"></i><i class="tri left"></i><i class="tri right"></i>
+      </div>
+      <div class="pad btn-face" data-key="X">X</div>
+      <div class="pad btn-face" data-key="Y">Y</div>
+      <div class="pad btn-face" data-key="A">A</div>
+      <div class="pad btn-face" data-key="B">B</div>
+      <div class="pad btn-pill" data-key="SELECT">Select</div>
+      <div class="pad btn-pill" data-key="START">Start</div>
+    </div>
+
+    <button class="sys" id="menuBtn" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h14"/></svg>
+    </button>
+    <button class="sys" id="ffBtn" aria-label="Fast-forward">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6.5v11a1 1 0 0 0 1.6.8L11 13.5v4a1 1 0 0 0 1.6.8l7.3-5.5a1 1 0 0 0 0-1.6l-7.3-5.5A1 1 0 0 0 11 6.5v4L4.6 5.7A1 1 0 0 0 3 6.5z"/></svg>
+    </button>
+  </div>
+
+  <div class="overlay" id="loading">
+    <div>
+      <div class="spinner"></div>
+      <div class="title" id="loadTitle">Loading…</div>
+      <div class="msg" id="loadMsg">Starting the emulator</div>
+    </div>
+  </div>
+
+  <script src="js/db.js"></script>
+  <script src="js/player.js"></script>
+</body>
+</html>
