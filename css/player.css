@@ -70,6 +70,9 @@ html, body { background: #000; overflow: hidden; overscroll-behavior: none; posi
 }
 .sys svg { width: 48%; height: 48%; }
 .sys.on { background: #e8b04b; color: #1a1408; border-color: transparent; opacity: 1; }
+.sys.hold { display: flex; flex-direction: column; gap: 1px; line-height: 1; }
+.sys.hold span { font-weight: 800; font-size: calc(var(--u) * 20px); }
+.sys.hold small { font-weight: 700; font-size: calc(var(--u) * 8.5px); letter-spacing: .1em; }
 
 #fps {
   position: fixed; left: calc(var(--safe-l) + 10px); top: calc(var(--safe-t) + 8px); z-index: 120;

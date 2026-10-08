@@ -115,7 +115,7 @@
   let splitActive = false;
   const pads = {};
   controls.querySelectorAll(".pad").forEach(el => (pads[el.dataset.key] = el));
-  const menuBtn = $("#menuBtn"), ffBtn = $("#ffBtn");
+  const menuBtn = $("#menuBtn"), ffBtn = $("#ffBtn"), holdBtn = $("#holdBtn");
 
   function place(el, x, y, w, h) {
     el.style.left = Math.round(x) + "px";
@@ -187,6 +187,7 @@
       place(pads.R, W - sr - 16 * u - shW, top, shW, shH);
       place(menuBtn, sl + 16 * u + shW + 12 * u, top + (shH - sys) / 2, sys, sys);
       place(ffBtn, W - sr - 16 * u - shW - 12 * u - sys, top + (shH - sys) / 2, sys, sys);
+      place(holdBtn, W - sr - 16 * u - shW - 24 * u - sys * 2, top + (shH - sys) / 2, sys, sys);
       const cy = H * 0.56;
       place(pads.DPAD, lc - D / 2, cy - D / 2, D, D);
       diamond(rc, cy);
@@ -197,6 +198,7 @@
         // Controller mode: tuck the two system buttons into the corners.
         place(menuBtn, sl + 14 * u, st + 14 * u, sys, sys);
         place(ffBtn, W - sr - 14 * u - sys, st + 14 * u, sys, sys);
+        place(holdBtn, W - sr - 26 * u - sys * 2, st + 14 * u, sys, sys);
       }
     } else {
       const bandTop = pic.y + pic.h;
@@ -210,6 +212,7 @@
       const mid = W / 2;
       place(menuBtn, mid - sys - 8 * u, shY + (shH - sys) / 2, sys, sys);
       place(ffBtn, mid + 8 * u, shY + (shH - sys) / 2, sys, sys);
+      place(holdBtn, mid + 20 * u + sys, shY + (shH - sys) / 2, sys, sys);
       const by = H - sb - pillH - 20 * u;
       place(pads.SELECT, mid - pillW - 10 * u, by, pillW, pillH);
       place(pads.START, mid + 10 * u, by, pillW, pillH);
@@ -265,10 +268,15 @@
     place(pads.START, mid + 6 * u, pillY, pillW, pillH);
     // Speed-up sits between the main screen and the touchscreen.
     const ffSize = 64 * u;
-    place(ffBtn, Math.max(rc + o + F / 2 + 24 * u, mx + mw - ffSize), Math.min(by + bh * 0.3, stripTop + 24 * u), ffSize, ffSize);
+    const ffX = Math.max(rc + o + F / 2 + 24 * u, mx + mw - ffSize), ffY = Math.min(by + bh * 0.3, stripTop + 24 * u);
+    place(ffBtn, ffX, ffY, ffSize, ffSize);
+    place(holdBtn, ffX, ffY + ffSize + 16 * u, ffSize, ffSize); // hold-B toggle, right under speed-up
     // Menu goes in the open top-right area.
     place(menuBtn, W - sr - 18 * u - sys, st + 18 * u, sys, sys);
-    if (!showPads) place(ffBtn, W - sr - 18 * u - sys * 2 - 12 * u, st + 18 * u, sys, sys);
+    if (!showPads) {
+      place(ffBtn, W - sr - 18 * u - sys * 2 - 12 * u, st + 18 * u, sys, sys);
+      place(holdBtn, W - sr - 18 * u - sys * 3 - 24 * u, st + 18 * u, sys, sys);
+    }
     finishLayout();
   }
 
@@ -312,6 +320,7 @@
   function sync() {
     const next = new Set();
     held.forEach(s => s.forEach(k => next.add(k)));
+    if (holdB) next.add("B");
     for (const k of next) if (!pressed.has(k)) send(k, 1);
     for (const k of pressed) if (!next.has(k)) send(k, 0);
     pressed = next;
@@ -400,6 +409,14 @@
     gm().setFastForwardRatio(settings.ffSpeed);
     gm().toggleFastForward(on ? 1 : 0);
   }
+  // Hold-B toggle (e.g. running in Pokémon): B stays pressed until tapped again.
+  let holdB = false;
+  holdBtn.addEventListener("click", () => {
+    holdB = !holdB;
+    holdBtn.classList.toggle("on", holdB);
+    sync();
+    toast(holdB ? "Holding B" : "B released", 900);
+  });
   ffBtn.addEventListener("click", () => { setFF(!ff); toast(ff ? `Fast-forward ${settings.ffSpeed}×` : "Normal speed", 1000); });
 
   // ---------- Screen layout ----------

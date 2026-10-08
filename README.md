@@ -48,6 +48,7 @@ Only use games you own.
 | DS touchscreen | Touch the bottom screen directly |
 | Menu (save states, layouts, quit) | ☰ button. On a controller: Home/PS button, or hold Select + Start |
 | Fast-forward | ⏩ button (speed set in Settings) |
+| Hold B | "B HOLD" button under fast-forward keeps B pressed (e.g. running) until you tap it again |
 | Controller | Pair it in iPad Settings → Bluetooth. On-screen buttons hide automatically while it's connected |
 | Keyboard | Arrows = D-pad, Z = A, X = B, A = X, S = Y, Q / E = L / R, Enter = Start, V = Select |
 | Quit | Menu → **Save & quit**. Reopening the game picks up exactly where you left off |
