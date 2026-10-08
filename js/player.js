@@ -45,6 +45,12 @@
   let videoAspect = LAYOUT_ASPECT[layout];
   const savePrefs = () => { try { localStorage.setItem(prefKey, JSON.stringify({ layout, swapped })); } catch (e) {} };
 
+  // ---------- Frame hook ----------
+  // The emulator draws inside requestAnimationFrame. Copying the touchscreen right after *every* frame
+  // callback means one copy always lands after the emulator has drawn, whatever order Safari runs them in.
+  const nativeRAF = window.requestAnimationFrame.bind(window);
+  window.requestAnimationFrame = cb => nativeRAF(t => { cb(t); try { copyBottom(); } catch (e) {} });
+
   // ---------- EmulatorJS boot ----------
   const layoutOpt = core === "melonds" ? "melonds_screen_layout" : "desmume_screens_layout";
   const coreDefaults = core === "melonds"
@@ -266,20 +272,16 @@
     finishLayout();
   }
 
-  // Copy the DS touchscreen out of the emulator's frame into its own panel each frame.
+  // Copy the DS touchscreen out of the emulator's frame into its own panel (called after every frame callback).
+  let bottomCtx = null;
   function copyBottom() {
-    if (splitActive && started && !emu.paused) {
-      const src = box.querySelector("canvas");
-      if (src && src.width && src.height) {
-        const g = bottomCv.getContext("2d");
-        g.imageSmoothingEnabled = false;
-        g.drawImage(src, 0, src.height / 2, src.width, src.height / 2, 0, 0, bottomCv.width, bottomCv.height);
-      }
-    }
-    requestAnimationFrame(copyBottom);
+    if (!splitActive || !started || emu.paused) return;
+    const src = box.querySelector("canvas");
+    if (!src || !src.width || !src.height) return;
+    if (!bottomCtx) { bottomCtx = bottomCv.getContext("2d"); }
+    bottomCtx.imageSmoothingEnabled = false;
+    bottomCtx.drawImage(src, 0, src.height / 2, src.width, src.height / 2, 0, 0, bottomCv.width, bottomCv.height);
   }
-  // Started only once the game runs, so each frame this runs right after the emulator has drawn
-  // (the frame is still readable then, without asking WebGL to keep every frame around).
 
   // ---------- Touch controls (multi-touch, slide between buttons) ----------
   const held = new Map(); // touch id -> Set of key names
@@ -605,10 +607,10 @@
         else if (performance.now() - comboSince > 700) { comboSince = Infinity; menuOpen ? closeMenu() : openMenu(); }
       } else comboSince = 0;
     }
-    requestAnimationFrame(pollPads);
+    nativeRAF(pollPads);
   }
   window.addEventListener("gamepadconnected", () => {}); // makes Safari expose pads sooner
-  requestAnimationFrame(pollPads);
+  nativeRAF(pollPads);
 
   // ---------- FPS readout ----------
   function startFps() {
@@ -631,7 +633,6 @@
     clearTimeout(bootTimer);
     clearInterval(progressTimer);
     startFps();
-    requestAnimationFrame(copyBottom);
     // Our own settings always win over anything EmulatorJS remembered.
     for (const [k, v] of Object.entries(coreDefaults)) gm().setVariable(k, v);
     try { emu.changeSettingOption && emu.changeSettingOption("virtual-gamepad", "disabled"); } catch (e) {}
