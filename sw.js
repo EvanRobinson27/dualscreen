@@ -1,6 +1,6 @@
 // Offline support: caches the app and emulator engine so it works with no internet.
 // Bump VERSION whenever you upload changed files.
-const VERSION = "dualscreen-v3";
+const VERSION = "dualscreen-v4";
 const CORE = [
   "./", "index.html", "play.html", "manifest.webmanifest",
   "css/app.css", "css/player.css",

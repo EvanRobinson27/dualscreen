@@ -54,7 +54,7 @@ const Store = {
 };
 
 const DEFAULT_SETTINGS = {
-  engine: "melonds",      // "melonds" (accurate) or "desmume2015" (faster)
+  engine: "desmume2015",  // "desmume2015" (faster, default) or "melonds" (more accurate, heavier)
   ffSpeed: 3,             // fast-forward multiplier
   opacity: 0.55,          // on-screen button opacity
   buttonSize: 1,          // 0.85 / 1 / 1.15
@@ -62,7 +62,7 @@ const DEFAULT_SETTINGS = {
   layout: "split",        // default layout for new games (Split = big top screen + separate touchscreen)
   autoResume: true,       // continue where you left off
   frameskip: 0,           // DeSmuME only: skip drawing N frames to keep game speed up
-  showFps: false,         // small speed readout while playing
+  showFps: true,          // small speed readout while playing
 };
 
 const Settings = {

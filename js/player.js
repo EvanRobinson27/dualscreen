@@ -222,18 +222,20 @@
     const D = 176 * u, F = 74 * u, gap = 10 * u, sys = 48 * u;
     const shW = 118 * u, shH = 52 * u, pillW = 92 * u, pillH = 36 * u;
     let mh, mx, my, bw;
+    // Main screen as big as the control strip below it allows; touchscreen fills the space to its right.
+    const gapX = W * 0.03, rightM = W * 0.035;
     if (showPads) {
-      mh = H * 0.5; mx = sl + W * 0.05; my = st + H * 0.065;
-      if (mh * 4 / 3 > W * 0.47) mh = W * 0.47 * 0.75;
-      bw = mh * 4 / 3 * 0.68;
+      mh = H * 0.56; mx = sl + W * 0.04; my = st + H * 0.05;
+      if (mh * 4 / 3 > W * 0.54) mh = W * 0.54 * 0.75;
     } else {
-      mh = H * 0.66; mx = sl + W * 0.035; my = st + H * 0.05;
+      mh = H * 0.7; mx = sl + W * 0.03; my = st + H * 0.04;
       if (mh * 4 / 3 > W * 0.6) mh = W * 0.6 * 0.75;
-      bw = mh * 4 / 3 * 0.6;
     }
-    const mw = mh * 4 / 3, bh = bw * 0.75;
-    const bx = Math.min(W - sr - W * 0.07 - bw, Math.max(mx + mw + 40 * u, W * 0.575));
-    const by = Math.min(H - sb - H * 0.08 - bh, Math.max(my + mh - bh * 0.15, H * 0.53));
+    const mw = mh * 4 / 3;
+    bw = Math.min(mw * 0.82, W - sr - rightM - (mx + mw + gapX));
+    const bh = bw * 0.75;
+    const bx = W - sr - rightM - bw;
+    const by = H - sb - H * 0.07 - bh;
     place(clip, mx, my, mw, mh);
     place(box, 0, 0, mw, mh * 2);           // emulator draws both screens; only the top half shows here
     place(bottomCv, bx, by, bw, bh);
@@ -251,7 +253,7 @@
     place(pads.A, rc + o - F / 2, cy - F / 2, F, F);
     const shY = stripTop + 14 * u;
     place(pads.L, lc - shW / 2, shY, shW, shH);
-    place(pads.R, rc - shW / 2, shY, shW, shH);
+    place(pads.R, rc + F / 2 + 6 * u, shY, shW, shH); // beside X, so they never overlap
     const pillY = H - sb - pillH - 16 * u, mid = (lc + rc) / 2;
     place(pads.SELECT, mid - pillW - 6 * u, pillY, pillW, pillH);
     place(pads.START, mid + 6 * u, pillY, pillW, pillH);
