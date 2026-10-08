@@ -61,6 +61,8 @@ const DEFAULT_SETTINGS = {
   touchControls: "auto",  // auto = hide while a controller is connected
   layout: "split",        // default layout for new games (Split = big top screen + separate touchscreen)
   autoResume: true,       // continue where you left off
+  frameskip: 0,           // DeSmuME only: skip drawing N frames to keep game speed up
+  showFps: false,         // small speed readout while playing
 };
 
 const Settings = {

@@ -46,16 +46,19 @@
   const savePrefs = () => { try { localStorage.setItem(prefKey, JSON.stringify({ layout, swapped })); } catch (e) {} };
 
   // ---------- EmulatorJS boot ----------
-  // Keep the emulator's WebGL frame readable so the Split layout can copy the touchscreen out of it.
-  const origGetContext = HTMLCanvasElement.prototype.getContext;
-  HTMLCanvasElement.prototype.getContext = function (type, attrs) {
-    if (type === "webgl" || type === "webgl2" || type === "experimental-webgl") attrs = Object.assign({}, attrs, { preserveDrawingBuffer: true });
-    return origGetContext.call(this, type, attrs);
-  };
   const layoutOpt = core === "melonds" ? "melonds_screen_layout" : "desmume_screens_layout";
   const coreDefaults = core === "melonds"
     ? { melonds_touch_mode: "Touch", melonds_boot_directly: "enabled", melonds_screen_layout: LAYOUT_VALUES.melonds[layout][+swapped] }
-    : { desmume_pointer_type: "touch", desmume_screens_layout: LAYOUT_VALUES.desmume2015[layout][+swapped] };
+    : { desmume_pointer_type: "touch", desmume_frameskip: String(settings.frameskip || 0), desmume_screens_layout: LAYOUT_VALUES.desmume2015[layout][+swapped] };
+
+  // Earlier versions let EmulatorJS cache a full extra copy of the ROM on every launch. Clean that up once.
+  try {
+    if (!localStorage.getItem("ds.cleanedRomCache")) {
+      indexedDB.deleteDatabase("EmulatorJS-roms");
+      indexedDB.deleteDatabase("EmulatorJS-core");
+      localStorage.setItem("ds.cleanedRomCache", "1");
+    }
+  } catch (e) {}
 
   Object.assign(window, {
     EJS_player: "#game",
@@ -69,6 +72,7 @@
     EJS_color: "#e8b04b",
     EJS_backgroundColor: "#000",
     EJS_disableAutoLang: true,
+    EJS_disableDatabases: true, // our library already stores the ROM; don't let EmulatorJS copy it again every launch
     EJS_language: "en-US",
     EJS_defaultOptions: Object.assign({ "virtual-gamepad": "disabled", "save-save-interval": "15" }, coreDefaults),
     EJS_Buttons: {
@@ -90,6 +94,14 @@
   const loaderScript = document.createElement("script");
   loaderScript.src = "data/loader.js";
   document.body.appendChild(loaderScript);
+  const loadMsg = $("#loadMsg");
+  const progressTimer = setInterval(() => {
+    const t = window.EJS_emulator && window.EJS_emulator.textElem && window.EJS_emulator.textElem.innerText;
+    if (!t) return;
+    const m = t.replace("Download Game Core", "Loading emulator").replace("Download Game Data", "Loading game")
+      .replace("Decompress Game Core", "Preparing emulator").replace("Decompress Game Data", "Preparing game");
+    if (m && loadMsg.textContent !== m) loadMsg.textContent = m;
+  }, 200);
   const bootTimer = setTimeout(() => { if (!started) fail("The game didn't start"); }, 90000);
 
   // ---------- Layout ----------
@@ -225,8 +237,7 @@
     place(clip, mx, my, mw, mh);
     place(box, 0, 0, mw, mh * 2);           // emulator draws both screens; only the top half shows here
     place(bottomCv, bx, by, bw, bh);
-    const dpr = window.devicePixelRatio || 1;
-    bottomCv.width = Math.round(bw * dpr); bottomCv.height = Math.round(bh * dpr);
+    if (bottomCv.width !== 256) { bottomCv.width = 256; bottomCv.height = 192; } // native DS resolution; CSS scales it up crisply
 
     const stripTop = my + mh;
     const cy = stripTop + Math.max(D / 2 + shH + 26 * u, (H - sb - stripTop) * 0.52);
@@ -255,7 +266,7 @@
 
   // Copy the DS touchscreen out of the emulator's frame into its own panel each frame.
   function copyBottom() {
-    if (splitActive && started) {
+    if (splitActive && started && !emu.paused) {
       const src = box.querySelector("canvas");
       if (src && src.width && src.height) {
         const g = bottomCv.getContext("2d");
@@ -265,7 +276,8 @@
     }
     requestAnimationFrame(copyBottom);
   }
-  requestAnimationFrame(copyBottom);
+  // Started only once the game runs, so each frame this runs right after the emulator has drawn
+  // (the frame is still readable then, without asking WebGL to keep every frame around).
 
   // ---------- Touch controls (multi-touch, slide between buttons) ----------
   const held = new Map(); // touch id -> Set of key names
@@ -596,9 +608,28 @@
   window.addEventListener("gamepadconnected", () => {}); // makes Safari expose pads sooner
   requestAnimationFrame(pollPads);
 
+  // ---------- FPS readout ----------
+  function startFps() {
+    const el = $("#fps");
+    if (!settings.showFps) return;
+    el.classList.remove("hidden");
+    let last = 0, lastT = performance.now();
+    setInterval(() => {
+      let n = 0;
+      try { n = gm().getFrameNum(); } catch (e) { return; }
+      const now = performance.now();
+      if (emu.paused) { el.textContent = "paused"; }
+      else if (last) el.textContent = Math.round((n - last) * 1000 / (now - lastT)) + " fps";
+      last = n; lastT = now;
+    }, 1000);
+  }
+
   // ---------- Start-up ----------
   async function onStarted() {
     clearTimeout(bootTimer);
+    clearInterval(progressTimer);
+    startFps();
+    requestAnimationFrame(copyBottom);
     // Our own settings always win over anything EmulatorJS remembered.
     for (const [k, v] of Object.entries(coreDefaults)) gm().setVariable(k, v);
     try { emu.changeSettingOption && emu.changeSettingOption("virtual-gamepad", "disabled"); } catch (e) {}

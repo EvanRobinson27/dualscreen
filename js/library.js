@@ -170,6 +170,10 @@ function openSettings() {
       <input type="range" min="0.2" max="1" step="0.05" value="${s.opacity}" id="opacity"></div>
     <div class="row"><label>Resume where I left off<span class="hint">Opens each game exactly where you quit.</span></label>
       ${seg("autoResume", [["true", "On"], ["false", "Off"]], String(s.autoResume))}</div>
+    <div class="row"><label>Frame skip<span class="hint">DeSmuME only. Keeps the game at full speed on slower iPads by drawing fewer frames.</span></label>
+      ${seg("frameskip", [[0, "Off"], [1, "1"], [2, "2"]], s.frameskip)}</div>
+    <div class="row"><label>Show FPS<span class="hint">60 means the game is running at full speed.</span></label>
+      ${seg("showFps", [["false", "Off"], ["true", "On"]], String(s.showFps))}</div>
   `, sheet => {
     sheet.querySelectorAll("[data-seg]").forEach(group => {
       group.addEventListener("click", e => {
@@ -178,7 +182,8 @@ function openSettings() {
         group.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
         let v = b.dataset.v;
         if (group.dataset.seg === "ffSpeed" || group.dataset.seg === "buttonSize") v = parseFloat(v);
-        if (group.dataset.seg === "autoResume") v = v === "true";
+        if (group.dataset.seg === "autoResume" || group.dataset.seg === "showFps") v = v === "true";
+        if (group.dataset.seg === "frameskip") v = parseInt(v, 10);
         Settings.set({ [group.dataset.seg]: v });
       });
     });
